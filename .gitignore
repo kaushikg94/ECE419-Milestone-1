@@ -1,0 +1,4 @@
+echoClient/echoClient.jar
+echoServer/echoServer.jar
+**/*.log
+**/bin/
