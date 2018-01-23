@@ -44,7 +44,7 @@ public class Server extends Thread {
         if(serverSocket != null) {
 	        while(isRunning()){
 	            try {
-	                Socket client = serverSocket.accept();                
+	                Socket client = serverSocket.accept();
 	                ClientConnection connection = 
 	                		new ClientConnection(client);
 	                new Thread(connection).start();
@@ -68,7 +68,7 @@ public class Server extends Thread {
     /**
      * Stops the server insofar that it won't listen at the given port any more.
      */
-    public void stopServer(){
+    public void stopServer() {
         running = false;
         try {
 			serverSocket.close();
@@ -88,7 +88,7 @@ public class Server extends Thread {
         
         } catch (IOException e) {
         	logger.error("Error! Cannot open server socket:");
-            if(e instanceof BindException){
+            if(e instanceof BindException) {
             	logger.error("Port " + port + " is already bound!");
             }
             return false;

@@ -89,18 +89,37 @@ public class ClientConnection implements Runnable {
 		int i = 0;
 		String line = null;
 		while((line = inStream.readLine()) != null) {
-			lines[i] = line;
 			if(line.equals("")) {
-				handleRequest(lines);
+				String actualLines[] = new String[i];
+				for(int j = 0; j < i; j++) {
+					actualLines[j] = lines[j];
+				}
+				handleRequest(actualLines);
+				i = 0;
+			} else {
+				lines[i] = line;
+				i++;
 			}
 		}
 	}
 
 	private void handleRequest(String[] lines) {
+		KVMessage request;
 		try {
-			// Unserialize request object
-			KVMessage request = Serialization.unserialize(lines);
+			request = Serialization.unserialize(lines);
+		} catch(Exception e) {
+			logger.error("Error: Unable to unserialize request", e);
+			KVMessage response = new KVMessageImpl(null,
+				"Invalid request", StatusType.GET_ERROR);
+			try {
+				sendResponse(response);
+			} catch(Exception e2) {
+				logger.error("Error: Unable to send error response", e2);
+			}
+			return;
+		}
 
+		try {
 			switch(request.getStatus()) {
 				case GET:
 					handleGetRequest(request);
@@ -116,9 +135,9 @@ public class ClientConnection implements Runnable {
 					sendResponse(response);
 			}
 		} catch(Exception e) {
-			logger.error("Error: Unable to unserialize request", e);
+			logger.error("Error: Unable to handle request", e);
 			KVMessage response = new KVMessageImpl(null,
-				"Unable to read request", StatusType.GET_ERROR);
+				"Unable to process request", StatusType.GET_ERROR);
 			try {
 				sendResponse(response);
 			} catch(Exception e2) {
@@ -143,11 +162,11 @@ public class ClientConnection implements Runnable {
 	}
 
 	private void handlePutRequest(KVMessage request) throws Exception {
-		boolean isInStorage = parentServer.inStorage(request.getKey());
 		try {
+			boolean isInStorage = parentServer.inStorage(request.getKey());
 			parentServer.putKV(request.getKey(), request.getValue());
 			StatusType status = isInStorage ?
-				(request.getValue().equals("") ?
+				(request.getValue() == null ?
 					StatusType.DELETE_SUCCESS : StatusType.PUT_UPDATE) :
 				StatusType.PUT_SUCCESS;
 			KVMessage response = new KVMessageImpl(request.getKey(),
@@ -156,7 +175,8 @@ public class ClientConnection implements Runnable {
 
 		} catch(Exception e) {
 			logger.error("Error: Unable to put KV", e);
-			StatusType status = request.getValue().equals("") ?
+			logger.debug("req val: " + request.getValue());
+			StatusType status = request.getValue() == null ?
 				StatusType.DELETE_ERROR :
 				StatusType.PUT_ERROR;
 			KVMessage response = new KVMessageImpl(null, "Unable to PUT",

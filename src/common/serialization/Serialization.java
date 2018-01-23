@@ -50,10 +50,11 @@ public class Serialization {
 	/**
 	 * Unserializes the given string into a KVMessage
 	 * @param lines the list of lines in the message to parse
-	 * 				(including trailing newline at end)
+	 * 				(excluding trailing blank line at end)
 	 * @return the unserialized KVMessage
 	 */
 	public static KVMessage unserialize(String[] lines) throws Exception {
+		logger.debug("n lines: " + lines.length);
 		switch(lines[0]) {
 			// Requests
 			case "GET":
@@ -79,7 +80,7 @@ public class Serialization {
 	}
 
 	public static KVMessage parseGetRequest(String[] lines) throws Exception {
-		if(lines.length != 3) {
+		if(lines.length != 2) {
 			logger.error("Error: Invalid number of arguments during " +
 				"unserialization of GET request");
 			throw new Exception("Invalid number of arguments");
@@ -89,18 +90,18 @@ public class Serialization {
 	}
 
 	public static KVMessage parsePutRequest(String[] lines) throws Exception {
-		if(lines.length < 3 || lines.length > 4) {
+		if(lines.length < 2 || lines.length > 3) {
 			logger.error("Error: Invalid number of arguments during " +
 				"unserialization of PUT request");
 			throw new Exception("Invalid number of arguments");
 		}
 
-		return new KVMessageImpl(lines[1], lines.length == 4 ? lines[2] : null,
-			lines[0]);
+		return new KVMessageImpl(lines[1],
+			lines.length == 3 ? lines[2] : null, lines[0]);
 	}
 
 	public static KVMessage parseSuccessResponse(String[] lines) throws Exception {
-		if(lines.length != 4) {
+		if(lines.length != 3) {
 			logger.error("Error: Invalid number of arguments during " +
 				"unserialization of error success");
 			throw new Exception("Invalid number of arguments");
@@ -110,7 +111,7 @@ public class Serialization {
 	}
 
 	public static KVMessage parseErrorResponse(String[] lines) throws Exception {
-		if(lines.length != 3) {
+		if(lines.length != 2) {
 			logger.error("Error: Invalid number of arguments during " +
 				"unserialization of error response");
 			throw new Exception("Invalid number of arguments");
