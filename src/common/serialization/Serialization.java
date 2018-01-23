@@ -41,8 +41,8 @@ public class Serialization {
 			case DELETE_ERROR:
 				return requestType + "\n" + message.getValue() + "\n\n";
 			default:
-				logger.error("Error: invalid request type for " +
-					"serialization: " + requestType);
+				logger.error("Invalid request type for serialization: " +
+					requestType);
 				return "";
 		}
 	}
@@ -53,8 +53,8 @@ public class Serialization {
 	 * 				(excluding trailing blank line at end)
 	 * @return the unserialized KVMessage
 	 */
-	public static KVMessage unserialize(String[] lines) throws Exception {
-		logger.debug("n lines: " + lines.length);
+	public static KVMessage unserialize(String[] lines)
+			throws IllegalArgumentException {
 		switch(lines[0]) {
 			// Requests
 			case "GET":
@@ -73,50 +73,51 @@ public class Serialization {
 			case "DELETE_ERROR":
 				return parseErrorResponse(lines);
 			
+			// Unrecognized
 			default:
-				logger.error("Error: Invalid status type: " + lines[0]);
-				throw new Exception("Invalid status type");
+				throw new IllegalArgumentException("Invalid status type " +
+					"when unserializing request: '" + lines[0] + "'");
 		}
 	}
 
-	public static KVMessage parseGetRequest(String[] lines) throws Exception {
+	public static KVMessage parseGetRequest(String[] lines)
+			throws IllegalArgumentException {
 		if(lines.length != 2) {
-			logger.error("Error: Invalid number of arguments during " +
-				"unserialization of GET request");
-			throw new Exception("Invalid number of arguments");
+			throw new IllegalArgumentException("Invalid number of arguments " +
+				"when unserializing GET request: " + lines.length);
 		}
 
 		return new KVMessageImpl(lines[1], null, lines[0]);
 	}
 
-	public static KVMessage parsePutRequest(String[] lines) throws Exception {
+	public static KVMessage parsePutRequest(String[] lines)
+			throws IllegalArgumentException {
 		if(lines.length < 2 || lines.length > 3) {
-			logger.error("Error: Invalid number of arguments during " +
-				"unserialization of PUT request");
-			throw new Exception("Invalid number of arguments");
+			throw new IllegalArgumentException("Invalid number of arguments " +
+				"when unserializing PUT request: " + lines.length);
 		}
 
 		return new KVMessageImpl(lines[1],
 			lines.length == 3 ? lines[2] : null, lines[0]);
 	}
 
-	public static KVMessage parseSuccessResponse(String[] lines) throws Exception {
+	public static KVMessage parseSuccessResponse(String[] lines)
+			throws IllegalArgumentException {
 		if(lines.length != 3) {
-			logger.error("Error: Invalid number of arguments during " +
-				"unserialization of error success");
-			throw new Exception("Invalid number of arguments");
+			throw new IllegalArgumentException("Invalid number of arguments " +
+				"when unserializing success response: " + lines.length);
 		}
 
 		return new KVMessageImpl(lines[1], lines[2], lines[0]);
 	}
 
-	public static KVMessage parseErrorResponse(String[] lines) throws Exception {
+	public static KVMessage parseErrorResponse(String[] lines)
+			throws IllegalArgumentException {
 		if(lines.length != 2) {
-			logger.error("Error: Invalid number of arguments during " +
-				"unserialization of error response");
-			throw new Exception("Invalid number of arguments");
+			throw new IllegalArgumentException("Invalid number of arguments " +
+				"when unserializing error response: " + lines.length);
 		}
 
-		return new KVMessageImpl(null, lines[2], lines[0]);
+		return new KVMessageImpl(null, lines[1], lines[0]);
 	}
 }

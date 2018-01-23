@@ -109,8 +109,7 @@ public class KVServer implements IKVServer {
 	                		client.getInetAddress().getHostName() +
 	                		" on port " + client.getPort());
 	            } catch (IOException e) {
-	            	logger.error("Error: " +
-	            			"Unable to establish connection", e);
+	            	logger.error("Unable to establish connection", e);
 	            }
 	        }
 		}
@@ -130,8 +129,7 @@ public class KVServer implements IKVServer {
         try {
 			serverSocket.close();
 		} catch (IOException e) {
-			logger.error("Error: " +
-					"Unable to close socket on port: " + port, e);
+			logger.error("Unable to close socket on port: " + port, e);
 		}
 	}
 
@@ -144,9 +142,9 @@ public class KVServer implements IKVServer {
             return true;
         
         } catch (IOException e) {
-        	logger.error("Error: Unable to open server socket");
+        	logger.error("Unable to open server socket");
             if(e instanceof BindException) {
-            	logger.error("Error: Port " + port + " is already bound");
+            	logger.error("Port already bound: " + port);
             }
             return false;
         }

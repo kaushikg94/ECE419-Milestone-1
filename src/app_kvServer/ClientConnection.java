@@ -60,13 +60,13 @@ public class ClientConnection implements Runnable {
 				try {
 					handleRequests();
 				} catch(IOException e) {
-					logger.warn("Warning: Connection lost");
+					logger.info("Connection to client lost");
 					isOpen = false;
 				}
 			}
 
 		} catch(IOException e) {
-			logger.error("Error: Connection could not be established", e);
+			logger.error("Connection to client could not be established", e);
 			
 		} finally {
 			try {
@@ -76,11 +76,16 @@ public class ClientConnection implements Runnable {
 					clientSocket.close();
 				}
 			} catch (IOException e) {
-				logger.error("Error: Unable to tear down connection", e);
+				logger.error("Unable to tear down connection to client", e);
 			}
 		}
 	}
 
+	/**
+	 * Reads inputs line by line until an empty line is encountered. At this
+	 * point all accumulated lines are considered one single request and this
+	 * request is attempted to be processed.
+	 */
 	private void handleRequests() throws IOException {
 		BufferedReader inStream =
 			new BufferedReader(new InputStreamReader(input));
@@ -103,91 +108,93 @@ public class ClientConnection implements Runnable {
 		}
 	}
 
+	/**
+	 * Handles a single request, provided as a list of lines
+	 * @param lines the lines in the request (excluding trailing empty line)
+	 */
 	private void handleRequest(String[] lines) {
+		// Attempt to unserialize request from string into KVMessage
 		KVMessage request;
 		try {
 			request = Serialization.unserialize(lines);
-		} catch(Exception e) {
-			logger.error("Error: Unable to unserialize request", e);
+		} catch(IllegalArgumentException e) {
+			logger.error("Unable to unserialize request", e);
 			KVMessage response = new KVMessageImpl(null,
-				"Invalid request", StatusType.GET_ERROR);
-			try {
-				sendResponse(response);
-			} catch(Exception e2) {
-				logger.error("Error: Unable to send error response", e2);
-			}
+				"Invalid request", StatusType.GET_ERROR); // TODO generic error?
+			sendResponse(response);
 			return;
 		}
 
-		try {
-			switch(request.getStatus()) {
-				case GET:
-					handleGetRequest(request);
-					break;
-				case PUT:
-					handlePutRequest(request);
-					break;
-				default:
-					logger.error("Error: Invalid request type: " +
-						request.getStatus());
-					KVMessage response = new KVMessageImpl(null,
-						"Invalid request type", StatusType.GET_ERROR);
-					sendResponse(response);
-			}
-		} catch(Exception e) {
-			logger.error("Error: Unable to handle request", e);
-			KVMessage response = new KVMessageImpl(null,
-				"Unable to process request", StatusType.GET_ERROR);
-			try {
+		// Attempt to process the request given its type
+		switch(request.getStatus()) {
+			case GET:
+				handleGetRequest(request);
+				break;
+			case PUT:
+				handlePutRequest(request);
+				break;
+			default:
+				logger.error("Invalid request type: " + request.getStatus());
+				KVMessage response = new KVMessageImpl(null,
+					"Invalid request type", StatusType.GET_ERROR); // TODO generic error?
 				sendResponse(response);
-			} catch(Exception e2) {
-				logger.error("Error: Unable to send error response", e2);
-			}
 		}
 	}
 
-	private void handleGetRequest(KVMessage request) throws Exception {
+	private void handleGetRequest(KVMessage request) {
+		// Attempt to get from server
+		String value;
 		try {
-			String value = parentServer.getKV(request.getKey());
-			KVMessage response = new KVMessageImpl(request.getKey(), value,
-				StatusType.GET_SUCCESS);
-			sendResponse(response);
-
+			value = parentServer.getKV(request.getKey());
 		} catch(Exception e) {
-			logger.error("Error: Unable to get KV", e);
-			KVMessage response = new KVMessageImpl(null, "Unable to GET",
-				StatusType.GET_ERROR);
+			logger.error("Unable to get key-value from server", e);
+			KVMessage response = new KVMessageImpl(null,
+				"Error while processing request", StatusType.GET_ERROR);
 			sendResponse(response);
+			return;
 		}
+
+		// Upon success, return result in response
+		KVMessage response = new KVMessageImpl(request.getKey(), value,
+			StatusType.GET_SUCCESS);
+		sendResponse(response);
 	}
 
-	private void handlePutRequest(KVMessage request) throws Exception {
+	private void handlePutRequest(KVMessage request) {
+		// Attempt to insert into server
+		boolean isInStorage;
 		try {
-			boolean isInStorage = parentServer.inStorage(request.getKey());
+			isInStorage = parentServer.inStorage(request.getKey());
 			parentServer.putKV(request.getKey(), request.getValue());
-			StatusType status = isInStorage ?
-				(request.getValue() == null ?
-					StatusType.DELETE_SUCCESS : StatusType.PUT_UPDATE) :
-				StatusType.PUT_SUCCESS;
-			KVMessage response = new KVMessageImpl(request.getKey(),
-				request.getValue(), status);
-			sendResponse(response);
-
 		} catch(Exception e) {
-			logger.error("Error: Unable to put KV", e);
-			logger.debug("req val: " + request.getValue());
+			logger.error("Unable to put key-value into server", e);
 			StatusType status = request.getValue() == null ?
 				StatusType.DELETE_ERROR :
 				StatusType.PUT_ERROR;
-			KVMessage response = new KVMessageImpl(null, "Unable to PUT",
-				status);
+			KVMessage response = new KVMessageImpl(null,
+				"Error while processing request", status);
 			sendResponse(response);
+			return;
 		}
+
+		// Upon success, return response message
+		StatusType status = isInStorage ?
+			(request.getValue() == null ?
+				StatusType.DELETE_SUCCESS : StatusType.PUT_UPDATE) :
+			StatusType.PUT_SUCCESS;
+		KVMessage response = new KVMessageImpl(request.getKey(),
+			request.getValue(), status);
+		sendResponse(response);
 	}
 
-	private void sendResponse(KVMessage response) throws IOException {
+	private void sendResponse(KVMessage response) {
 		String responseString = Serialization.serialize(response);
-		output.write(responseString.getBytes());
-		output.flush();
+
+		try {
+			output.write(responseString.getBytes());
+			output.flush();
+		} catch(IOException e) {
+			logger.error("Unable to send response to client", e);
+		}
 	}
 }
