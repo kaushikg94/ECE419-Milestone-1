@@ -2,3 +2,5 @@ echoClient/echoClient.jar
 echoServer/echoServer.jar
 **/*.log
 **/bin/
+m1-client.jar
+m1-server.jar

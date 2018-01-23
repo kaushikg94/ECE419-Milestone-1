@@ -1,30 +1,13 @@
-package app_kvServer;
+package cache;
 
-public interface IKVServer {
-    public enum CacheStrategy {
-        None,
-        LRU,
-        LFU,
-        FIFO
-    };
+import app_kvServer.IKVServer;
 
-    /**
-     * Get the port number of the server
-     * @return  port number
-     */
-    public int getPort();
-
-    /**
-     * Get the hostname of the server
-     * @return  hostname of server
-     */
-    public String getHostname();
-
+public interface ICache {
     /**
      * Get the cache strategy of the server
      * @return  cache strategy
      */
-    public CacheStrategy getCacheStrategy();
+    public IKVServer.CacheStrategy getCacheStrategy();
 
     /**
      * Get the cache size
@@ -70,20 +53,4 @@ public interface IKVServer {
      * Clear the storage of the server
      */
     public void clearStorage();
-
-    /**
-     * Starts running the server
-     */
-    public void run();
-
-    /**
-     * Abruptly stop the server without any additional actions
-     * NOTE: this includes performing saving to storage
-     */
-    public void kill();
-
-    /**
-     * Gracefully stop the server, can perform any additional actions
-     */
-    public void close();
 }

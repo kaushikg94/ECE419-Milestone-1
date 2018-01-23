@@ -11,18 +11,18 @@ public interface KVMessage {
 		PUT_UPDATE, 	/* Put - request successful, i.e. value updated */
 		PUT_ERROR, 		/* Put - request not successful */
 		DELETE_SUCCESS, /* Delete - request successful */
-		DELETE_ERROR 	/* Delete - request successful */
+		DELETE_ERROR 	/* Delete - request unsuccessful */
 	}
 
 	/**
 	 * @return the key that is associated with this message, 
-	 * 		null if not key is associated.
+	 * 		null if not key is associated. Max length 20 bytes (chars).
 	 */
 	public String getKey();
 	
 	/**
 	 * @return the value that is associated with this message, 
-	 * 		null if not value is associated.
+	 * 		null if not value is associated. Max length 122880 bytes (chars).
 	 */
 	public String getValue();
 	
@@ -33,5 +33,3 @@ public interface KVMessage {
 	public StatusType getStatus();
 	
 }
-
-

@@ -1,6 +1,29 @@
 package app_kvServer;
 
+import logger.LogSetup;
+
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.io.IOException;
+import java.net.BindException;
+
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
+import cache.ICache;
+
 public class KVServer implements IKVServer {
+
+	private static Logger logger = Logger.getRootLogger();
+
+	private int port;
+
+	private int cacheSize;
+	private IKVServer.CacheStrategy cacheStrategy;
+	private ICache cache;
+
+    private ServerSocket serverSocket;
+    private boolean isRunning;
 
 	/**
 	 * Start KV Server at given port
@@ -12,79 +35,180 @@ public class KVServer implements IKVServer {
 	 *           currently not contained in the cache. Options are "FIFO", "LRU",
 	 *           and "LFU".
 	 */
-	public KVServer(int port, int cacheSize, String strategy) {
-		// TODO Auto-generated method stub
+	public KVServer(int port, int cacheSize,
+			IKVServer.CacheStrategy cacheStrategy) {
+		this.port = port;
+		this.cacheSize = cacheSize;
+		this.cacheStrategy = cacheStrategy;
+		// TODO create cache
 	}
 
 	@Override
-	public int getPort(){
-		// TODO Auto-generated method stub
-		return -1;
+	public int getPort() {
+		return this.port;
 	}
 
 	@Override
-    public String getHostname(){
-		// TODO Auto-generated method stub
+    public String getHostname() {
 		return null;
 	}
 
 	@Override
-    public CacheStrategy getCacheStrategy(){
-		// TODO Auto-generated method stub
-		return IKVServer.CacheStrategy.None;
+    public CacheStrategy getCacheStrategy() {
+		return this.cacheStrategy;
 	}
 
 	@Override
-    public int getCacheSize(){
-		// TODO Auto-generated method stub
-		return -1;
+    public int getCacheSize() {
+		return this.cacheSize;
 	}
 
 	@Override
-    public boolean inStorage(String key){
-		// TODO Auto-generated method stub
-		return false;
+    public boolean inStorage(String key) {
+		return cache.inStorage(key);
 	}
 
 	@Override
-    public boolean inCache(String key){
-		// TODO Auto-generated method stub
-		return false;
+    public boolean inCache(String key) {
+		return cache.inCache(key);
 	}
 
 	@Override
-    public String getKV(String key) throws Exception{
-		// TODO Auto-generated method stub
-		return "";
+    public String getKV(String key) throws Exception {
+		return cache.getKV(key);
 	}
 
 	@Override
-    public void putKV(String key, String value) throws Exception{
-		// TODO Auto-generated method stub
+    public void putKV(String key, String value) throws Exception {
+		cache.putKV(key, value);
 	}
 
 	@Override
-    public void clearCache(){
-		// TODO Auto-generated method stub
+    public void clearCache() {
+		cache.clearCache();
 	}
 
 	@Override
-    public void clearStorage(){
-		// TODO Auto-generated method stub
+    public void clearStorage() {
+		cache.clearStorage();
 	}
 
 	@Override
-    public void run(){
-		// TODO Auto-generated method stub
+    public void run() {
+		isRunning = initializeServer();
+
+        if(serverSocket != null) {
+	        while(this.isRunning) {
+	            try {
+	                Socket client = serverSocket.accept();                
+	                ClientConnection connection = 
+	                		new ClientConnection(client, this);
+	                new Thread(connection).start();
+	                
+	                logger.info("Connected to " +
+	                		client.getInetAddress().getHostName() +
+	                		" on port " + client.getPort());
+	            } catch (IOException e) {
+	            	logger.error("Error: " +
+	            			"Unable to establish connection", e);
+	            }
+	        }
+		}
+
+        logger.info("Server stopped");
 	}
 
 	@Override
-    public void kill(){
-		// TODO Auto-generated method stub
+    public void kill() {
+		isRunning = false;
+		// TODO is this sufficient? Should we Thread.currentThread().stop()?
 	}
 
 	@Override
-    public void close(){
-		// TODO Auto-generated method stub
+    public void close() {
+		isRunning = false;
+        try {
+			serverSocket.close();
+		} catch (IOException e) {
+			logger.error("Error: " +
+					"Unable to close socket on port: " + port, e);
+		}
 	}
+
+    private boolean initializeServer() {
+    	logger.info("Initializing server...");
+    	try {
+            this.serverSocket = new ServerSocket(this.port);
+			logger.info("Server listening on port: " +
+				serverSocket.getLocalPort());    
+            return true;
+        
+        } catch (IOException e) {
+        	logger.error("Error: Unable to open server socket");
+            if(e instanceof BindException) {
+            	logger.error("Error: Port " + port + " is already bound");
+            }
+            return false;
+        }
+    }
+    
+    /**
+     * Main entry point for the KV server application. 
+     * @param args contains the port number at args[0], cache size (# entries)
+	 * at args[1], and cache strategy (one of: None, LRU, LFU, FIFO) at args[2]
+     */
+    public static void main(String[] args) {
+    	try {
+			// Start logging
+			new LogSetup("logs/server.log", Level.ALL);
+
+			// Check argument count
+			if(args.length != 3) {
+				System.out.println("Error: Invalid number of arguments");
+				System.out.println("Usage: Server <port> <cache size> " +
+					"<cache strategy>");
+				return;
+			}
+
+			// Parse arguments
+			int port = Integer.parseInt(args[0]);
+
+			int cacheSize = Integer.parseInt(args[1]);
+
+			IKVServer.CacheStrategy cacheStrategy;
+			switch(args[2]) {
+				case "None":
+					cacheStrategy = CacheStrategy.None;
+					break;
+				case "LRU":
+					cacheStrategy = CacheStrategy.LRU;
+					break;
+				case "LFU":
+					cacheStrategy = CacheStrategy.LFU;
+					break;
+				case "FIFO":
+					cacheStrategy = CacheStrategy.FIFO;
+					break;
+				default:
+					System.out.println("Error: Invalid cache strategy " +
+						"(should be one of None, LRU, LFU, or FIFO)");
+					return;
+			}
+
+			// Start server
+			new KVServer(port, cacheSize, cacheStrategy).run();
+
+		} catch (IOException e) {
+			System.out.println("Error: Unable to initialize logger");
+			e.printStackTrace();
+			System.exit(1);
+
+		} catch (NumberFormatException e) {
+			System.out.println("Error: Invalid argument: <port> or " +
+				"<cache size> not a valid number");
+			System.out.println("Usage: Server <port> <cache size> " +
+				"<cache strategy>");
+			System.exit(1);
+		}
+    }
 }
