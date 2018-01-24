@@ -94,7 +94,7 @@ public class ClientConnection implements Runnable {
 		int i = 0;
 		String line = null;
 		while((line = inStream.readLine()) != null) {
-			if(line.equals("")) {
+			if(line.isEmpty()) {
 				String actualLines[] = new String[i];
 				for(int j = 0; j < i; j++) {
 					actualLines[j] = lines[j];

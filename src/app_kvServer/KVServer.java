@@ -76,7 +76,12 @@ public class KVServer implements IKVServer {
 
 	@Override
     public void putKV(String key, String value) throws Exception {
-		cachedStorage.putKV(key, value);
+		// Check if we're doing a regular insert/update or delete
+		if(value.isEmpty()) {
+			cachedStorage.deleteKV(key);
+		} else {
+			cachedStorage.putKV(key, value);
+		}
 	}
 
 	@Override

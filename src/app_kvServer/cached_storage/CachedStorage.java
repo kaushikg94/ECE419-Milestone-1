@@ -44,6 +44,8 @@ public class CachedStorage {
             case FIFO:
                 //TODO
                 break;
+            default:
+                cache = null;
         }
 
         // Set up storage
@@ -81,7 +83,7 @@ public class CachedStorage {
      * @return  true if key in cache, false otherwise
      */
     public boolean inCache(String key) {
-        return cache.inCache(key);
+        return (cache != null) && cache.inCache(key);
     }
 
     /**
@@ -91,7 +93,7 @@ public class CachedStorage {
      *      when key not in the key range of the server
      */
     public String getKV(String key) throws Exception {
-        if(inCache(key)) {
+        if(cache != null && inCache(key)) {
             return cache.getKV(key);
         } else {
             return storage.getKV(key);
@@ -108,7 +110,24 @@ public class CachedStorage {
         storage.putKV(key, value);
 
         // Put into cache if successfully inserted into persistent storage
-        cache.putKV(key, value);
+        if(cache != null) {
+            cache.putKV(key, value);
+        }
+    }
+
+    /**
+     * Delete the key-value pair from storage
+     * @throws Exception
+     *      when key not in the key range of the server
+     */
+    public void deleteKV(String key) throws Exception {
+        // Delete from persistent storage first
+        storage.deleteKV(key);
+
+        // Delete from cache if successfully deleted from persistent storage
+        if(cache != null) {
+            cache.deleteKV(key);
+        }
     }
 
     /**
@@ -116,7 +135,9 @@ public class CachedStorage {
      */
     public void clearCache() {
         logger.info("Clearing cache");
-        cache.clear();
+        if(cache != null) {
+            cache.clear();
+        }
     }
 
     /**
