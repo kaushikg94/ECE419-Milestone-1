@@ -11,6 +11,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import cache.ICache;
+import cached_storage.CachedStorage;
 
 public class KVServer implements IKVServer {
 
@@ -18,9 +19,7 @@ public class KVServer implements IKVServer {
 
 	private int port;
 
-	private int cacheSize;
-	private IKVServer.CacheStrategy cacheStrategy;
-	private ICache cache;
+	private CachedStorage cachedStorage;
 
     private ServerSocket serverSocket;
     private boolean isRunning;
@@ -30,17 +29,14 @@ public class KVServer implements IKVServer {
 	 * @param port given port for storage server to operate
 	 * @param cacheSize specifies how many key-value pairs the server is allowed
 	 *           to keep in-memory
-	 * @param strategy specifies the cache replacement strategy in case the cache
-	 *           is full and there is a GET- or PUT-request on a key that is
-	 *           currently not contained in the cache. Options are "FIFO", "LRU",
-	 *           and "LFU".
+	 * @param strategy specifies the cache replacement strategy in case the
+	 * 			 cache is full and there is a GET- or PUT-request on a key that
+	 *           is currently not contained in the cache. Options are "FIFO",
+	 *           "LRU", and "LFU".
 	 */
-	public KVServer(int port, int cacheSize,
-			IKVServer.CacheStrategy cacheStrategy) {
+	public KVServer(int port, CacheStrategy cacheStrategy, int cacheSize) {
 		this.port = port;
-		this.cacheSize = cacheSize;
-		this.cacheStrategy = cacheStrategy;
-		// TODO create cache
+		this.cachedStorage = new CachedStorage(cacheStrategy, cacheSize);
 	}
 
 	@Override
@@ -55,42 +51,42 @@ public class KVServer implements IKVServer {
 
 	@Override
     public CacheStrategy getCacheStrategy() {
-		return this.cacheStrategy;
+		return cachedStorage.getCacheStrategy();
 	}
 
 	@Override
     public int getCacheSize() {
-		return this.cacheSize;
+		return cachedStorage.getCacheSize();
 	}
 
 	@Override
     public boolean inStorage(String key) {
-		return cache.inStorage(key);
+		return cachedStorage.inStorage(key);
 	}
 
 	@Override
     public boolean inCache(String key) {
-		return cache.inCache(key);
+		return cachedStorage.inCache(key);
 	}
 
 	@Override
     public String getKV(String key) throws Exception {
-		return cache.getKV(key);
+		return cachedStorage.getKV(key);
 	}
 
 	@Override
     public void putKV(String key, String value) throws Exception {
-		cache.putKV(key, value);
+		cachedStorage.putKV(key, value);
 	}
 
 	@Override
     public void clearCache() {
-		cache.clearCache();
+		cachedStorage.clearCache();
 	}
 
 	@Override
     public void clearStorage() {
-		cache.clearStorage();
+		cachedStorage.clearStorage();
 	}
 
 	@Override
@@ -175,9 +171,6 @@ public class KVServer implements IKVServer {
 
 			IKVServer.CacheStrategy cacheStrategy;
 			switch(args[2]) {
-				case "None":
-					cacheStrategy = CacheStrategy.None;
-					break;
 				case "LRU":
 					cacheStrategy = CacheStrategy.LRU;
 					break;
@@ -189,12 +182,12 @@ public class KVServer implements IKVServer {
 					break;
 				default:
 					System.out.println("Error: Invalid cache strategy " +
-						"(should be one of None, LRU, LFU, or FIFO)");
+						"(should be one of LRU, LFU, or FIFO)");
 					return;
 			}
 
 			// Start server
-			new KVServer(port, cacheSize, cacheStrategy).run();
+			new KVServer(port, cacheStrategy, cacheSize).run();
 
 		} catch (IOException e) {
 			System.out.println("Error: Unable to initialize logger");

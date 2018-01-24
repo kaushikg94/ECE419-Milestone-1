@@ -1,20 +1,14 @@
-package cache;
+package storage;
 
 import app_kvServer.IKVServer;
 
-public interface ICache {
+public interface IStorage {
     /**
-     * Get the cache size
-     * @return  cache size
-     */
-    public int getCacheSize();
-
-    /**
-     * Check if key is in cache.
+     * Check if key is in storage.
      * NOTE: does not modify any other properties
-     * @return  true if key in cache, false otherwise
+     * @return  true if key in storage, false otherwise
      */
-    public boolean inCache(String key);
+    public boolean inStorage(String key);
 
     /**
      * Get the value associated with the key
@@ -39,7 +33,7 @@ public interface ICache {
     public void deleteKV(String key) throws Exception;
 
     /**
-     * Clear the local cache of the server
+     * Clear the storage of the server
      */
     public void clear();
 }

@@ -142,12 +142,12 @@ public class ClientConnection implements Runnable {
 	}
 
 	private void handleGetRequest(KVMessage request) {
-		// Attempt to get from server
+		// Attempt to get from cached storage
 		String value;
 		try {
 			value = parentServer.getKV(request.getKey());
 		} catch(Exception e) {
-			logger.error("Unable to get key-value from server", e);
+			logger.error("Unable to get key-value from cached storage", e);
 			KVMessage response = new KVMessageImpl(null,
 				"Error while processing request", StatusType.GET_ERROR);
 			sendResponse(response);
@@ -161,13 +161,13 @@ public class ClientConnection implements Runnable {
 	}
 
 	private void handlePutRequest(KVMessage request) {
-		// Attempt to insert into server
+		// Attempt to insert into cached storage
 		boolean isInStorage;
 		try {
 			isInStorage = parentServer.inStorage(request.getKey());
 			parentServer.putKV(request.getKey(), request.getValue());
 		} catch(Exception e) {
-			logger.error("Unable to put key-value into server", e);
+			logger.error("Unable to put key-value into cached storage", e);
 			StatusType status = request.getValue() == null ?
 				StatusType.DELETE_ERROR :
 				StatusType.PUT_ERROR;
