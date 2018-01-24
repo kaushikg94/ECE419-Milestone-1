@@ -10,10 +10,18 @@ import java.nio.file.Path;
 import java.nio.file.Files;
 import java.nio.file.FileSystemException;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.math.BigInteger;
+
+import org.apache.log4j.Logger;
 
 import app_kvServer.IKVServer;
 
 public class Storage implements IStorage {
+
+	private static Logger logger = Logger.getRootLogger();
+
     private String rootDir;
 
     /**
@@ -33,7 +41,7 @@ public class Storage implements IStorage {
     @Override
     public boolean inStorage(String key) {
         // Check if a file with the specified key exists
-        File file = new File(rootDir, key);
+        File file = new File(rootDir, getMd5Hash(key));
         return file.isFile();
     }
 
@@ -49,7 +57,7 @@ public class Storage implements IStorage {
             throw new FileNotFoundException("Specified key not found");
         }
 
-        File file = new File(rootDir, key);
+        File file = new File(rootDir, getMd5Hash(key));
         FileReader fr = new FileReader(file.getPath());
         BufferedReader br = new BufferedReader(fr);
         String value = br.readLine();
@@ -66,7 +74,7 @@ public class Storage implements IStorage {
     @Override
     public void putKV(String key, String value) throws Exception {
         // Create file if it does not exist
-        File file = new File(rootDir, key);
+        File file = new File(rootDir, getMd5Hash(key));
         if(!file.isFile()) {
             if(!file.createNewFile()) {
                 throw new FileSystemException("Unable to create key");
@@ -89,7 +97,7 @@ public class Storage implements IStorage {
         if(!inStorage(key)) {
             throw new FileNotFoundException("Specified key not found");
         }
-        File file = new File(rootDir, key);
+        File file = new File(rootDir, getMd5Hash(key));
         if(!file.delete()) {
             throw new FileSystemException("Unable to delete key");
         }
@@ -107,5 +115,20 @@ public class Storage implements IStorage {
                 throw new FileSystemException("Unable to delete key");
             }
         }
+    }
+
+    /**
+     * Get the MD5 hash for a given string
+     */
+    private String getMd5Hash(String str) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            digest.update(str.getBytes(), 0, str.length());
+            return new BigInteger(1, digest.digest()).toString(16);
+        } catch(NoSuchAlgorithmException e) {
+            logger.fatal("Unable to use MD5 hashing");
+            System.exit(1);
+        }
+        return "";
     }
 }
