@@ -55,6 +55,9 @@ public class Serialization {
 	 */
 	public static KVMessage unserialize(String[] lines)
 			throws IllegalArgumentException {
+		if(lines.length < 1) {
+			throw new IllegalArgumentException("Cannot process empty request");
+		}
 		switch(lines[0]) {
 			// Requests
 			case "GET":

@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import app_kvServer.IKVServer.CacheStrategy;
 import cache.ICache;
 import storage.IStorage;
+import storage.Storage;
 
 /**
  * Represents a connection end point for a particular client that is 
@@ -23,6 +24,7 @@ public class CachedStorage {
 	
 	/**
 	 * Constructs a new CachedStorage object with the given parameters.
+	 * @param storageRootDir root directory to store persistent data to
 	 * @param cacheSize specifies how many key-value pairs the server is allowed
 	 *           to keep in-memory
 	 * @param strategy specifies the cache replacement strategy in case the
@@ -30,7 +32,8 @@ public class CachedStorage {
 	 *           is currently not contained in the cache. Options are "FIFO",
 	 *           "LRU", and "LFU".
 	 */
-	public CachedStorage(CacheStrategy cacheStrategy, int cacheSize) {
+    public CachedStorage(String storageRootDir, CacheStrategy cacheStrategy,
+            int cacheSize) {
 		this.cacheStrategy = cacheStrategy;
 
         // Set up cache
@@ -49,7 +52,7 @@ public class CachedStorage {
         }
 
         // Set up storage
-        // TODO
+        storage = new Storage(storageRootDir);
 	}
 
     /**
@@ -145,6 +148,10 @@ public class CachedStorage {
      */
     public void clearStorage() {
         logger.warn("Clearing persistent storage");
-        storage.clear();
+        try {
+            storage.clear();
+        } catch(Exception e) {
+            logger.error("Unable to clear persistent storage", e);
+        }
     }
 }

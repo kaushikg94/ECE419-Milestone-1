@@ -15,6 +15,8 @@ import cached_storage.CachedStorage;
 
 public class KVServer implements IKVServer {
 
+	private static final String PERSISTENT_STORAGE_ROOT_DIR = "data";
+
 	private static Logger logger = Logger.getRootLogger();
 
 	private int port;
@@ -36,7 +38,8 @@ public class KVServer implements IKVServer {
 	 */
 	public KVServer(int port, CacheStrategy cacheStrategy, int cacheSize) {
 		this.port = port;
-		this.cachedStorage = new CachedStorage(cacheStrategy, cacheSize);
+		this.cachedStorage = new CachedStorage(PERSISTENT_STORAGE_ROOT_DIR,
+			cacheStrategy, cacheSize);
 	}
 
 	@Override
@@ -77,7 +80,7 @@ public class KVServer implements IKVServer {
 	@Override
     public void putKV(String key, String value) throws Exception {
 		// Check if we're doing a regular insert/update or delete
-		if(value.isEmpty()) {
+		if(value == null || value.isEmpty()) {
 			cachedStorage.deleteKV(key);
 		} else {
 			cachedStorage.putKV(key, value);

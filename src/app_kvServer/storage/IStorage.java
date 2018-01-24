@@ -35,5 +35,5 @@ public interface IStorage {
     /**
      * Clear the storage of the server
      */
-    public void clear();
+    public void clear() throws Exception;
 }
