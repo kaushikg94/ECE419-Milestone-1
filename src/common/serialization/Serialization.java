@@ -78,8 +78,8 @@ public class Serialization {
 			
 			// Unrecognized
 			default:
-				throw new IllegalArgumentException("Invalid status type " +
-					"when unserializing request: '" + lines[0] + "'");
+				throw new IllegalArgumentException("Invalid status type: '" +
+					lines[0] + "'");
 		}
 	}
 
@@ -87,7 +87,7 @@ public class Serialization {
 			throws IllegalArgumentException {
 		if(lines.length != 2) {
 			throw new IllegalArgumentException("Invalid number of arguments " +
-				"when unserializing GET request: " + lines.length);
+				"for GET request: " + lines.length);
 		}
 
 		return new KVMessageImpl(lines[1], null, lines[0]);
@@ -97,7 +97,7 @@ public class Serialization {
 			throws IllegalArgumentException {
 		if(lines.length < 2 || lines.length > 3) {
 			throw new IllegalArgumentException("Invalid number of arguments " +
-				"when unserializing PUT request: " + lines.length);
+				"for PUT request: " + lines.length);
 		}
 
 		return new KVMessageImpl(lines[1],
@@ -108,7 +108,7 @@ public class Serialization {
 			throws IllegalArgumentException {
 		if(lines.length != 3) {
 			throw new IllegalArgumentException("Invalid number of arguments " +
-				"when unserializing success response: " + lines.length);
+				"for success response: " + lines.length);
 		}
 
 		return new KVMessageImpl(lines[1], lines[2], lines[0]);
@@ -118,7 +118,7 @@ public class Serialization {
 			throws IllegalArgumentException {
 		if(lines.length != 2) {
 			throw new IllegalArgumentException("Invalid number of arguments " +
-				"when unserializing error response: " + lines.length);
+				"for error response: " + lines.length);
 		}
 
 		return new KVMessageImpl(null, lines[1], lines[0]);

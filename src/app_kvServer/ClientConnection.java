@@ -119,9 +119,9 @@ public class ClientConnection implements Runnable {
 		try {
 			request = Serialization.unserialize(lines);
 		} catch(IllegalArgumentException e) {
-			logger.error("Unable to unserialize request", e);
+			logger.info("Unable to unserialize request: " + e.getMessage());
 			KVMessage response = new KVMessageImpl(null,
-				"Invalid request", StatusType.GET_ERROR); // TODO generic error?
+				"Invalid request", StatusType.GET_ERROR);
 			sendResponse(response);
 			return;
 		}
@@ -135,15 +135,13 @@ public class ClientConnection implements Runnable {
 				handlePutRequest(request);
 				break;
 			default:
-				logger.error("Invalid request type: " + request.getStatus());
-				KVMessage response = new KVMessageImpl(null,
-					"Invalid request type", StatusType.GET_ERROR); // TODO generic error?
-				sendResponse(response);
+				// Should have been caught in unserialize function
 		}
 	}
 
 	private void handleGetRequest(KVMessage request) {
 		// Attempt to get from cached storage
+		logger.info("Handling GET request: " + request.getKey());
 		String value;
 		try {
 			value = parentServer.getKV(request.getKey());
@@ -169,6 +167,7 @@ public class ClientConnection implements Runnable {
 
 	private void handlePutRequest(KVMessage request) {
 		// Attempt to insert into cached storage
+		logger.info("Handling PUT request: " + request.getKey());
 		boolean isInStorage;
 		try {
 			isInStorage = parentServer.inStorage(request.getKey());
