@@ -1,5 +1,6 @@
 package cached_storage;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
@@ -109,11 +110,15 @@ public class CachedStorage {
     public String getKV(String key) throws Exception {
         if(cache != null && inCache(key)) {
             return cache.getKV(key);
-        } else {
-            String value = storage.getKV(key);
-            cache.putKV(key, value);
-            return value;
         }
+
+        if(!inStorage(key)) {
+            throw new FileNotFoundException("Specified key not found");
+        }
+
+        String value = storage.getKV(key);
+        cache.putKV(key, value);
+        return value;
     }
 
     /**

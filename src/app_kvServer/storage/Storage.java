@@ -47,17 +47,14 @@ public class Storage implements IStorage {
     }
 
     /**
-     * Get the value associated with the key
+     * Get the value associated with the key, assume caller has already checked
+     * that it exists before calling
      * @return  value associated with key
      * @throws Exception
      *      when key not in the key range of the server
      */
     @Override
     public String getKV(String key) throws Exception {
-        if(!inStorage(key)) {
-            throw new FileNotFoundException("Specified key not found");
-        }
-
         logger.info("Getting from storage: " + key);
         File file = new File(rootDir, getMd5Hash(key));
         FileReader fr = new FileReader(file.getPath());

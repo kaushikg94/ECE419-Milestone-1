@@ -3,6 +3,7 @@ package app_kvServer;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -146,6 +147,12 @@ public class ClientConnection implements Runnable {
 		String value;
 		try {
 			value = parentServer.getKV(request.getKey());
+		} catch(FileNotFoundException e) {
+			logger.info("Requested key not found: " + request.getKey());
+			KVMessage response = new KVMessageImpl(null,
+				"Specified key not found", StatusType.GET_ERROR);
+			sendResponse(response);
+			return;
 		} catch(Exception e) {
 			logger.error("Unable to get key-value from cached storage", e);
 			KVMessage response = new KVMessageImpl(null,

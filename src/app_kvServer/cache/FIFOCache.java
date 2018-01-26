@@ -42,7 +42,8 @@ public class FIFOCache implements ICache {
     }
 
     /**
-     * Get the value associated with the key
+     * Get the value associated with the key, assume caller has already checked
+     * that it exists before calling
      * @return  value associated with key
      * @throws Exception
      *      when key not in the key range of the server
