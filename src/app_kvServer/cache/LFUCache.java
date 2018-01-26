@@ -7,21 +7,21 @@ import org.apache.log4j.Logger;
 
 import app_kvServer.IKVServer;
 
-public class FIFOCache implements ICache {
+public class LFUCache implements ICache {
 
 	private static Logger logger = Logger.getRootLogger();
 
     private int cacheSize;
     private Hashtable<String, String> cache;
     private int nEntriesInCache;
-    private LinkedList<String> fifoOrder;
+    private Hashtable<String, Integer> lfuUsages;
 
-    public FIFOCache(int cacheSize) {
-        logger.info("Initializing FIFO cache with " + cacheSize + " entries");
+    public LFUCache(int cacheSize) {
+        logger.info("Initializing LFU cache with " + cacheSize + " entries");
         this.cacheSize = cacheSize;
         cache = new Hashtable<String, String>();
         nEntriesInCache = 0;
-        fifoOrder = new LinkedList<String>();
+        lfuUsages = new Hashtable<String, Integer>();
     }
 
     /**
@@ -49,6 +49,7 @@ public class FIFOCache implements ICache {
      */
     public String getKV(String key) throws Exception {
         logger.info("Getting from cache: " + key);
+        lfuUsages.put(key, lfuUsages.get(key) + 1);
         return cache.get(key);
     }
 
@@ -62,21 +63,34 @@ public class FIFOCache implements ICache {
         if(inCache(key)) {
             logger.info("Updating in cache: " + key);
             cache.put(key, value);
+            lfuUsages.put(key, lfuUsages.get(key) + 1);
             return;
         }
 
         // Check if we need to evict an entry first
         if(nEntriesInCache >= cacheSize) {
-            String keyToEvict = fifoOrder.removeFirst();
-            logger.info("Evicting from cache: " + keyToEvict);
+            String keyToEvict = getLfuKey();
+            logger.info("Evicting from cache: " + keyToEvict +
+                " (has " + lfuUsages.get(keyToEvict) + " usage(s))");
             cache.remove(keyToEvict);
             nEntriesInCache--;
+            lfuUsages.remove(keyToEvict);
         }
 
         logger.info("Inserting into cache: " + key);
         cache.put(key, value);
         nEntriesInCache++;
-        fifoOrder.addLast(key);
+        lfuUsages.put(key, 1);
+    }
+
+    private String getLfuKey() {
+        String lfuKey = null;
+        for(String key : lfuUsages.keySet()) {
+            if(lfuKey == null || lfuUsages.get(key) < lfuUsages.get(lfuKey)) {
+                lfuKey = key;
+            }
+        }
+        return lfuKey;
     }
 
     /**
@@ -88,7 +102,7 @@ public class FIFOCache implements ICache {
         logger.info("Deleting from cache: " + key);
         cache.remove(key);
         nEntriesInCache--;
-        fifoOrder.remove(key);
+        lfuUsages.remove(key);
     }
 
     /**
@@ -98,6 +112,6 @@ public class FIFOCache implements ICache {
         logger.info("Clearing cache");
         cache.clear();
         nEntriesInCache = 0;
-        fifoOrder.clear();
+        lfuUsages.clear();
     }
 }

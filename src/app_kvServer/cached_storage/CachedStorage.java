@@ -5,8 +5,9 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 
 import app_kvServer.IKVServer.CacheStrategy;
-import cache.FIFOCache;
 import cache.ICache;
+import cache.LFUCache;
+import cache.FIFOCache;
 import storage.IStorage;
 import storage.Storage;
 
@@ -43,7 +44,7 @@ public class CachedStorage {
                 // TODO
                 break;
             case LFU:
-                // TODO
+                cache = new LFUCache(cacheSize);
                 break;
             case FIFO:
                 cache = new FIFOCache(cacheSize);
