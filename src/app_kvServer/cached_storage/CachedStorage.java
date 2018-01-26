@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import app_kvServer.IKVServer.CacheStrategy;
 import cache.ICache;
 import cache.LFUCache;
+import cache.LRUCache;
 import cache.FIFOCache;
 import storage.IStorage;
 import storage.Storage;
@@ -41,7 +42,7 @@ public class CachedStorage {
         // Set up cache
         switch(cacheStrategy) {
             case LRU:
-                // TODO
+                cache = new LRUCache(cacheSize);
                 break;
             case LFU:
                 cache = new LFUCache(cacheSize);
