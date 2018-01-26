@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 
 import app_kvServer.IKVServer.CacheStrategy;
+import cache.FIFOCache;
 import cache.ICache;
 import storage.IStorage;
 import storage.Storage;
@@ -45,7 +46,7 @@ public class CachedStorage {
                 // TODO
                 break;
             case FIFO:
-                //TODO
+                cache = new FIFOCache(cacheSize);
                 break;
             default:
                 cache = null;
@@ -68,7 +69,11 @@ public class CachedStorage {
      * @return  cache size
      */
     public int getCacheSize() {
-        return cache.getCacheSize();
+        if(cache != null) {
+            return cache.getCacheSize();
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -86,7 +91,11 @@ public class CachedStorage {
      * @return  true if key in cache, false otherwise
      */
     public boolean inCache(String key) {
-        return (cache != null) && cache.inCache(key);
+        if(cache != null) {
+            return cache.inCache(key);
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -99,7 +108,9 @@ public class CachedStorage {
         if(cache != null && inCache(key)) {
             return cache.getKV(key);
         } else {
-            return storage.getKV(key);
+            String value = storage.getKV(key);
+            cache.putKV(key, value);
+            return value;
         }
     }
 

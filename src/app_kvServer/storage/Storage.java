@@ -29,6 +29,7 @@ public class Storage implements IStorage {
 	 * @param rootDir the root directory to store all data in
 	 */
     public Storage(String rootDir) {
+        logger.info("Initializing persistent storage");
         this.rootDir = rootDir;
         new File(rootDir).mkdirs();
     }
@@ -57,6 +58,7 @@ public class Storage implements IStorage {
             throw new FileNotFoundException("Specified key not found");
         }
 
+        logger.info("Getting from storage: " + key);
         File file = new File(rootDir, getMd5Hash(key));
         FileReader fr = new FileReader(file.getPath());
         BufferedReader br = new BufferedReader(fr);
@@ -76,9 +78,12 @@ public class Storage implements IStorage {
         // Create file if it does not exist
         File file = new File(rootDir, getMd5Hash(key));
         if(!file.isFile()) {
+            logger.info("Inserting into storage: " + key);
             if(!file.createNewFile()) {
                 throw new FileSystemException("Unable to create key");
             }
+        } else {
+           logger.info("Updating in storage: " + key);
         }
 
         // Write data to file (overwriting any previous data)
@@ -97,6 +102,7 @@ public class Storage implements IStorage {
         if(!inStorage(key)) {
             throw new FileNotFoundException("Specified key not found");
         }
+        logger.info("Deleting from storage: " + key);
         File file = new File(rootDir, getMd5Hash(key));
         if(!file.delete()) {
             throw new FileSystemException("Unable to delete key");
@@ -109,6 +115,7 @@ public class Storage implements IStorage {
     @Override
     public void clear() throws Exception {
         // Delete all files in root directory
+        logger.info("Clearing storage");
         File rootDirectory = new File(rootDir);
         for(File file: rootDirectory.listFiles()) {
             if(!file.delete()) {

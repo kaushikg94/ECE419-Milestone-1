@@ -138,7 +138,7 @@ public class KVServer implements IKVServer {
 	}
 
     private boolean initializeServer() {
-    	logger.info("Initializing server...");
+			logger.info("Initializing server socket");
     	try {
             this.serverSocket = new ServerSocket(this.port);
 			logger.info("Server listening on port: " +
