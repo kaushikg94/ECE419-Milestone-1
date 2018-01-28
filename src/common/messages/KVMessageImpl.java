@@ -36,16 +36,16 @@ public class KVMessageImpl implements KVMessage {
 				this.status = StatusType.PUT_SUCCESS;
 				break;
 			case "PUT_UPDATE":
-				this.status = StatusType.PUT_SUCCESS;
+				this.status = StatusType.PUT_UPDATE;
 				break;
 			case "PUT_ERROR":
-				this.status = StatusType.PUT_SUCCESS;
+				this.status = StatusType.PUT_ERROR;
 				break;
 			case "DELETE_SUCCESS":
-				this.status = StatusType.PUT_SUCCESS;
+				this.status = StatusType.DELETE_SUCCESS;
 				break;
 			case "DELETE_ERROR":
-				this.status = StatusType.PUT_SUCCESS;
+				this.status = StatusType.DELETE_ERROR;
 				break;
 			default:
 				logger.warn("Invalid status type: " + status);

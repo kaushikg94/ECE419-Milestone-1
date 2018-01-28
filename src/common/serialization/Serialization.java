@@ -29,7 +29,8 @@ public class Serialization {
 				return "GET\n" + message.getKey() + "\n\n";
 			case PUT:
 				return "PUT\n" + message.getKey() + "\n" +
-					message.getValue() + "\n\n";
+					(message.getValue() == null ? "" :
+					message.getValue() + "\n") + "\n";
 			case GET_SUCCESS:
 			case PUT_SUCCESS:
 			case PUT_UPDATE:
