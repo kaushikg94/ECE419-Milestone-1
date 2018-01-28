@@ -37,8 +37,12 @@ public class KVClient implements IKVClient {
 	private static final String PROMPT = "KVClient>>> ";
 	private static final String PROMPTIN = "KVClient<<< ";
 
+	public static boolean waitForServer = false;
+
 	private BufferedReader stdin;
-	private boolean stop = false;
+	public boolean stop = false;
+	private boolean inputReady = true;
+
 	
 	private KVStore client = null;	
 	private String serverAddress;
@@ -46,11 +50,10 @@ public class KVClient implements IKVClient {
 
 
 	public void run(){
-		
+
 		while(!stop) {
 			stdin = new BufferedReader(new InputStreamReader(System.in));
 			System.out.print(PROMPTIN);
-
 			try {
 				String cmdLine = stdin.readLine();
 				this.handleCommand(cmdLine);
@@ -58,11 +61,12 @@ public class KVClient implements IKVClient {
 				stop = true;
 				printError("CLI does not respond - KVClient terminated ");
 			}
-		}
 
+		}
 	}
 
 	private void handleCommand(String cmdLine) {
+		
 		String[] tokens = cmdLine.split("\\s+");
 		String command = tokens[0];
 		switch(command){
@@ -78,11 +82,15 @@ public class KVClient implements IKVClient {
 				break;
 
 			case "put":
+				waitForServer = true;
+				// stop = true;
 				logger.info("User input: put command");
 				put(tokens);
 				break;
 
 			case "get":
+				waitForServer = true;
+				// stop = true;
 				logger.info("User input: get command");
 				get(tokens);
 				break;
@@ -98,10 +106,11 @@ public class KVClient implements IKVClient {
 				break;
 
 			case "quit":
-				logger.info("User input: quit command");
 				stop = true;
-				disconnect();
+				logger.info("User input: quit command");
+				// disconnect();
 				System.out.println(PROMPT + "KVClient successful exit!");
+				System.exit(0);
 				break;
 
 			default:

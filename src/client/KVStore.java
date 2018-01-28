@@ -34,9 +34,10 @@ public class KVStore extends Thread implements KVCommInterface {
 	 * @param port the port of the KVServer
 	 */
 
-	private Logger logger = Logger.getRootLogger();	
-	private Set<KVClient> listeners;
+	private static final String PROMPT = "KVClient>>> ";
 
+	private Logger logger = Logger.getRootLogger();	
+	KVClient listener = null;
 	private OutputStream output;
  	private InputStream input;
  	private Socket socket;
@@ -50,13 +51,15 @@ public class KVStore extends Thread implements KVCommInterface {
 	private static final int MAX_REQUEST_LINES = 1024;
 
 
-	public KVStore(String address, int port) 
-		throws UnknownHostException, IOException{
+	public KVStore(String address, int port) {
 		// TODO Auto-generated method stub
+ 		try {
 		this.serverAddress = address;
 		this.serverPort = port;
-		listeners = new HashSet<KVClient>();
 		setRunning(true);
+ 		} catch (Exception e) {
+			logger.info("Unable to create KVStore for address: " + address + " port: " + port );
+ 		}
 
 	}
 
@@ -69,7 +72,7 @@ public class KVStore extends Thread implements KVCommInterface {
 	}
 
 	public void addListener(KVClient listener){
-		listeners.add(listener);
+		this.listener = listener;
 	}
 
 	public void run(){
@@ -125,32 +128,32 @@ public class KVStore extends Thread implements KVCommInterface {
 
 		switch(request.getStatus()){
 			case GET_ERROR:
-				System.out.printf("GET_ERROR: %s\n", request.getValue());
+				System.out.printf(PROMPT + "GET_ERROR: %s\n", request.getValue());
 				break;
 			case GET_SUCCESS:
-				System.out.printf("GET_SUCCESS: key: %s, value: %s\n", request.getKey(), request.getValue());
+				System.out.printf(PROMPT + "GET_SUCCESS: key: %s, value: %s\n", request.getKey(), request.getValue());
 				break;
 			case PUT_SUCCESS:
-				System.out.printf("PUT_SUCCESS: key: %s, value: %s\n", request.getKey(), request.getValue());
+				System.out.printf(PROMPT + "PUT_SUCCESS: key: %s, value: %s\n", request.getKey(), request.getValue());
 				break;
 			case PUT_UPDATE:
-				System.out.printf("PUT_UPDATE: key: %s, value: %s\n", request.getKey(), request.getValue());
+				System.out.printf(PROMPT + "PUT_UPDATE: key: %s, value: %s\n", request.getKey(), request.getValue());
 				break;
 			case PUT_ERROR:
-				System.out.printf("PUT_ERROR: %s\n", request.getValue());
+				System.out.printf(PROMPT + "PUT_ERROR: %s\n", request.getValue());
 				break;
 			case DELETE_SUCCESS:
-				System.out.printf("DELETE_SUCCESS: key: %s, value: %s\n", request.getKey(), request.getValue());
+				System.out.printf(PROMPT + "DELETE_SUCCESS: key: %s, value: %s\n", request.getKey(), request.getValue());
 				break;
 			case DELETE_ERROR:
-				System.out.printf("DELETE_ERROR: %s\n", request.getValue());			
+				System.out.printf(PROMPT + "DELETE_ERROR: %s\n", request.getValue());			
 				break;
 			default:
 				// Should have been caught in unserialize function
 				System.out.println("Server has returned invalid input");
 				break;
-
 		}
+
 	}
 
 	public void sendMessage(String msg) throws IOException {
@@ -191,7 +194,6 @@ public class KVStore extends Thread implements KVCommInterface {
 		// TODO Auto-generated method stub
 		KVMessage temp = new KVMessageImpl(key, value, StatusType.PUT);
 		String serialized = Serialization.serialize(temp);
-		System.out.println(serialized);
 		this.sendMessage(serialized);
 
 		return null;
