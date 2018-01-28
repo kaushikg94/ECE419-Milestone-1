@@ -17,7 +17,7 @@ public class ServerTest extends TestCase {
 	private KVServer kvServer;
 	
 	public void setUp() {
-		kvServer = new KVServer(PORT, CACHE_STRATEGY, CACHE_SIZE);
+		kvServer = new KVServer(PORT, CACHE_SIZE, CACHE_STRATEGY);
 		kvServer.clearStorage();
 	}
 

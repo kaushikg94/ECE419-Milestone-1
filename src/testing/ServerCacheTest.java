@@ -15,9 +15,9 @@ public class ServerCacheTest extends TestCase {
 	private KVServer fifoServer;
 	
 	public void setUp() {
-		lruServer = new KVServer(4000, CacheStrategy.LRU, 2);
-		lfuServer = new KVServer(4001, CacheStrategy.LFU, 2);
-		fifoServer = new KVServer(4002, CacheStrategy.FIFO, 2);
+		lruServer = new KVServer(4000, 2, CacheStrategy.LRU);
+		lfuServer = new KVServer(4001, 2, CacheStrategy.LFU);
+		fifoServer = new KVServer(4002, 2, CacheStrategy.FIFO);
 		lruServer.clearStorage();
 	}
 

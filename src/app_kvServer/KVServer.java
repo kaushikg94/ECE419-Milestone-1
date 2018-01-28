@@ -36,7 +36,7 @@ public class KVServer implements IKVServer {
 	 *           is currently not contained in the cache. Options are "FIFO",
 	 *           "LRU", and "LFU".
 	 */
-	public KVServer(int port, CacheStrategy cacheStrategy, int cacheSize) {
+	public KVServer(int port, int cacheSize, CacheStrategy cacheStrategy) {
 		this.port = port;
 		this.cachedStorage = new CachedStorage(PERSISTENT_STORAGE_ROOT_DIR,
 			cacheStrategy, cacheSize);
@@ -200,7 +200,7 @@ public class KVServer implements IKVServer {
 			}
 
 			// Start server
-			new KVServer(port, cacheStrategy, cacheSize).run();
+			new KVServer(port, cacheSize, cacheStrategy).run();
 
 		} catch (IOException e) {
 			System.out.println("Error: Unable to initialize logger");
