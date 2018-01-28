@@ -37,13 +37,12 @@ public class KVClient implements IKVClient {
 	private static final String PROMPT = "KVClient>>> ";
 	private static final String PROMPTIN = "KVClient<<< ";
 
-	public static boolean waitForServer = false;
+	public volatile static boolean waitForServer = false;
 
 	private BufferedReader stdin;
 	public boolean stop = false;
 	private boolean inputReady = true;
 
-	
 	private KVStore client = null;	
 	private String serverAddress;
 	private int serverPort;
@@ -52,8 +51,12 @@ public class KVClient implements IKVClient {
 	public void run(){
 
 		while(!stop) {
+			
+			if (!waitForServer){
 			stdin = new BufferedReader(new InputStreamReader(System.in));
 			System.out.print(PROMPTIN);
+			
+			
 			try {
 				String cmdLine = stdin.readLine();
 				this.handleCommand(cmdLine);
@@ -61,7 +64,7 @@ public class KVClient implements IKVClient {
 				stop = true;
 				printError("CLI does not respond - KVClient terminated ");
 			}
-
+			}
 		}
 	}
 

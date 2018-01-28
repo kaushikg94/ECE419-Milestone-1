@@ -154,6 +154,8 @@ public class KVStore extends Thread implements KVCommInterface {
 				break;
 		}
 
+		this.listener.waitForServer = false;
+
 	}
 
 	public void sendMessage(String msg) throws IOException {
