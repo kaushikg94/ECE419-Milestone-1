@@ -114,9 +114,10 @@ public class Storage implements IStorage {
         // Delete all files in root directory
         logger.info("Clearing storage");
         File rootDirectory = new File(rootDir);
-        for(File file: rootDirectory.listFiles()) {
+        for(File file : rootDirectory.listFiles()) {
             if(!file.delete()) {
-                throw new FileSystemException("Unable to delete key");
+                throw new FileSystemException("Unable to delete key: " +
+                    file.getName());
             }
         }
     }

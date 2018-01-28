@@ -49,6 +49,9 @@ public class KVServer implements IKVServer {
 
 	@Override
     public String getHostname() {
+		if(this.serverSocket != null) {
+			return this.serverSocket.getInetAddress().getHostName();
+		}
 		return null;
 	}
 
@@ -94,6 +97,7 @@ public class KVServer implements IKVServer {
 
 	@Override
     public void clearStorage() {
+		this.clearCache();
 		cachedStorage.clearStorage();
 	}
 
@@ -131,14 +135,16 @@ public class KVServer implements IKVServer {
     public void close() {
 		isRunning = false;
         try {
-			serverSocket.close();
+			if(serverSocket != null) {
+				serverSocket.close();
+			}
 		} catch (IOException e) {
 			logger.error("Unable to close socket on port: " + port, e);
 		}
 	}
 
     private boolean initializeServer() {
-			logger.info("Initializing server socket");
+		logger.info("Initializing server socket");
     	try {
             this.serverSocket = new ServerSocket(this.port);
 			logger.info("Server listening on port: " +
