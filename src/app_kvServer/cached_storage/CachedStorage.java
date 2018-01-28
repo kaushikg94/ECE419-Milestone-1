@@ -107,7 +107,7 @@ public class CachedStorage {
      * @throws Exception
      *      when key not in the key range of the server
      */
-    public String getKV(String key) throws Exception {
+    public synchronized String getKV(String key) throws Exception {
         if(cache != null && inCache(key)) {
             return cache.getKV(key);
         }
@@ -126,7 +126,7 @@ public class CachedStorage {
      * @throws Exception
      *      when key not in the key range of the server
      */
-    public void putKV(String key, String value) throws Exception {
+    public synchronized void putKV(String key, String value) throws Exception {
         // Put into persistent storage first
         storage.putKV(key, value);
 
@@ -141,7 +141,7 @@ public class CachedStorage {
      * @throws Exception
      *      when key not in the key range of the server
      */
-    public void deleteKV(String key) throws Exception {
+    public synchronized void deleteKV(String key) throws Exception {
         // Delete from persistent storage first
         storage.deleteKV(key);
 
@@ -154,7 +154,7 @@ public class CachedStorage {
     /**
      * Clear the local cache of the server
      */
-    public void clearCache() {
+    public synchronized void clearCache() {
         logger.info("Clearing cache");
         if(cache != null) {
             cache.clear();
@@ -164,7 +164,8 @@ public class CachedStorage {
     /**
      * Clear the storage of the server
      */
-    public void clearStorage() {
+    public synchronized void clearStorage() {
+		this.clearCache();
         logger.warn("Clearing persistent storage");
         try {
             storage.clear();
