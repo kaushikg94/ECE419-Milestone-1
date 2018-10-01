@@ -35,7 +35,6 @@ Examples:
 ```
 GET
 myKey
-
 ```
 
 ### Request: Put a value for a key
@@ -53,13 +52,11 @@ Examples:
 PUT
 myKey
 new data
-
 ```
 
 ```
 PUT
 myKey
-
 ```
 
 ### Response: For a put or get request
@@ -78,12 +75,10 @@ Examples:
 GET_SUCCESS
 myKey
 some data
-
 ```
 Note: All success responses are the same format.
 
 ```
 GET_ERROR
 Key does not exist
-
 ```
